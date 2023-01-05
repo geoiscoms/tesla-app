@@ -1,0 +1,35 @@
+node{
+    def mavenHome = tool name: 'maven 3.8.6'
+     stage('1clonecode'){
+      git "https://github.com/geoiscoms/tesla-app.git"
+    }
+     stage("2Test&Build"){
+        sh "echo building from maven for artifact"
+     sh "${mavenHome}/bin/mvn clean package"
+    }
+     stage("3codeQualityReport"){
+     sh "echo quality report analysis"
+          sh "${mavenHome}/bin/mvn sonar:sonar"
+    }
+     stage("4UploadArtifacts2Nexus"){
+        sh "${mavenHome}/bin/mvn deploy"
+    }
+     stage("5Deployto UAT"){
+    sh "echo deploying for user acceptes Testing"
+    deploy adapters: [tomcat9(credentialsId: 'tomcat_credential', path: '', url: 'http://3.144.152.104:8080/')], contextPath: null, war: '**/*war'
+    }
+     stage("6Quality gate"){
+   /*     sh "echo ready for review"
+ //   timeout ('time:5,unit:'minutes')   
+    //input message:'Appication ready for deployment,please review and approved'
+  */}
+     stage("6Deployto Production"){
+        sh "echo deploying for production"
+    deploy adapters: [tomcat9(credentialsId: 'tomcat_credential', path: '', url: 'http://3.144.152.104:8080/')], contextPath: null, war: 'target/*war'
+    }
+     stage("7Email 7Notification"){
+    sh "echo observe the mail notification once trigger"
+    emailext body: '''Hi All
+    kindly pay attention to this ongoing project.thanks''', recipientProviders: [buildUser(), contributor(), requestor()], subject: 'project status', to: 'israekg@yahoo.com'
+    }
+ }
