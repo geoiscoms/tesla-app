@@ -25,6 +25,7 @@ node{
   */}
      stage("6Deployto Production"){
         sh "echo deploying for production"
+        sh "sleep 50"
     deploy adapters: [tomcat9(credentialsId: 'tomcat_credential', path: '', url: 'http://3.144.152.104:8080/')], contextPath: null, war: 'target/*war'
     }
      stage("7Email 7Notification"){
